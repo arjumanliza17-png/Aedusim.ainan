@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/admin/"
+title = "Aedusim Admin"
+description = "Protected administration dashboard for Aedusim users, subscriptions, analytics, and platform settings."
+version = "1.0.0"
+id = "artifacts/aedusim-admin"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/admin/" ]
+localPort = 25270
+
+[services.development]
+run = "pnpm --filter @workspace/aedusim-admin run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aedusim-admin", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/aedusim-admin/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25270"
+BASE_PATH = "/admin/"

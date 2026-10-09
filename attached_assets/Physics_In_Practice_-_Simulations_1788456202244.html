@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Physics in Practice — Interactive Simulations</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --bg: #0a0e14;
+  --panel: #12161f;
+  --panel-2: #171c26;
+  --border: #232a37;
+  --border-soft: #1a2029;
+  --text: #eaeef2;
+  --muted: #8b96a5;
+  --dim: #57616f;
+  --mech: #38bdf8;
+  --thermo: #ff9d5c;
+  --wave: #b98af7;
+  --elec: #ffd23f;
+  --accent: var(--mech);
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.55;
+}
+.wrap { max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }
+header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+header svg { flex-shrink: 0; }
+h1 { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px; margin: 0; }
+header p { color: var(--muted); margin: 4px 0 0; font-size: 13.5px; }
+nav.tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 26px; }
+.tab {
+  font-family: 'JetBrains Mono'; font-size: 12.5px; letter-spacing: 0.03em;
+  background: var(--panel); color: var(--muted); border: 1px solid var(--border);
+  border-radius: 100px; padding: 9px 16px; cursor: pointer; transition: all .15s ease;
+}
+.tab:hover { color: var(--text); border-color: var(--border-soft); background: var(--panel-2); }
+.tab.active { color: #0a0e14; border-color: transparent; font-weight: 700; }
+.panel { display: none; }
+.panel.active { display: block; }
+.sim-title { font-family: 'Space Grotesk'; font-weight: 700; font-size: 19px; margin: 0 0 4px; }
+.sim-desc { color: var(--muted); font-size: 13.5px; margin: 0 0 18px; max-width: 640px; }
+.sim-layout { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+.sim-stage { flex: 2 1 440px; background: var(--panel); border: 1px solid var(--border-soft); border-radius: 12px; padding: 14px; }
+.sim-stage canvas { width: 100%; height: auto; display: block; border-radius: 6px; }
+.sim-controls { flex: 1 1 230px; display: flex; flex-direction: column; gap: 16px; }
+.ctrl-group { background: var(--panel); border: 1px solid var(--border-soft); border-radius: 12px; padding: 14px 16px; }
+.ctrl-row { margin-bottom: 12px; }
+.ctrl-row:last-child { margin-bottom: 0; }
+.ctrl-label { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
+.ctrl-label .val { font-family: 'JetBrains Mono'; color: var(--text); }
+input[type=range] {
+  width: 100%; height: 4px; -webkit-appearance: none; appearance: none;
+  background: var(--border); border-radius: 2px; outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent); cursor: pointer; border: 2px solid #0a0e14;
+}
+input[type=range]::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: 50%; background: var(--accent);
+  cursor: pointer; border: 2px solid #0a0e14;
+}
+button.action {
+  width: 100%; font-family: 'JetBrains Mono'; font-size: 12.5px; letter-spacing: 0.04em;
+  background: var(--accent); color: #0a0e14; border: none; border-radius: 8px;
+  padding: 11px; font-weight: 700; cursor: pointer; transition: opacity .15s ease;
+}
+button.action:hover { opacity: 0.88; }
+button.ghost {
+  width: 100%; font-family: 'JetBrains Mono'; font-size: 11.5px;
+  background: transparent; color: var(--muted); border: 1px solid var(--border);
+  border-radius: 8px; padding: 9px; cursor: pointer; margin-top: 8px;
+}
+button.ghost:hover { color: var(--text); border-color: var(--border-soft); }
+.toggle-row { display: flex; gap: 6px; }
+.toggle-btn {
+  flex: 1; font-family: 'JetBrains Mono'; font-size: 11.5px; text-align: center;
+  background: var(--panel-2); color: var(--muted); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 4px; cursor: pointer;
+}
+.toggle-btn.active { color: #0a0e14; border-color: transparent; font-weight: 700; }
+nav.subtabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+.subtab {
+  font-family: 'JetBrains Mono'; font-size: 11.5px;
+  background: transparent; color: var(--muted); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 12px; cursor: pointer;
+}
+.subtab:hover { color: var(--text); border-color: var(--border-soft); }
+.subtab.active { color: var(--text); border-color: var(--accent); background: var(--panel-2); }
+.sim-block { display: none; }
+.sim-block.active { display: block; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stats.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.stat-card { background: var(--panel); border: 1px solid var(--border-soft); border-radius: 10px; padding: 10px 12px; }
+.stat-label { font-family: 'JetBrains Mono'; font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+.stat-value { font-family: 'JetBrains Mono'; font-size: 17px; font-weight: 700; }
+.footnote { color: var(--dim); font-size: 11.5px; margin-top: 14px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <svg width="46" height="46" viewBox="0 0 400 400">
+    <circle cx="200" cy="200" r="178" fill="none" stroke="#232a37" stroke-width="6"/>
+    <ellipse cx="200" cy="200" rx="152" ry="66" fill="none" stroke="#38bdf8" stroke-width="9" transform="rotate(-20 200 200)"/>
+    <circle cx="322" cy="152" r="20" fill="#38bdf8"/>
+    <path d="M 34 214 Q 76 160 118 214 T 202 214 T 286 214 T 368 214" fill="none" stroke="#b98af7" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="200" cy="200" r="18" fill="#eaeef2"/>
+  </svg>
+  <div>
+    <h1>Physics in Practice — Simulations</h1>
+    <p>Interactive companions to the study guide. Adjust the controls and watch the physics play out.</p>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-sim="mech">01 · Mechanics</button>
+  <button class="tab" data-sim="thermo">02 · Thermodynamics</button>
+  <button class="tab" data-sim="wave">03 · Waves &amp; Oscillations</button>
+  <button class="tab" data-sim="elec">04 · Electricity</button>
+</nav>
+
+<section class="panel active" data-panel="mech">
+  <nav class="subtabs">
+    <button class="subtab active" data-chapter="mech" data-simkey="mech-projectile">Projectile motion</button>
+    <button class="subtab" data-chapter="mech" data-simkey="mech-collision">Collisions</button>
+    <button class="subtab" data-chapter="mech" data-simkey="mech-circular">Circular motion</button>
+  </nav>
+
+  <div class="sim-block active" data-simkey="mech-projectile">
+  <div class="sim-title">Projectile motion</div>
+  <p class="sim-desc">Set a launch angle and speed, then fire. The trajectory scales to fit so every shot is easy to read — previous shots stay on screen, faded, for comparison.</p>
+  <div class="sim-layout">
+    <div class="sim-stage"><canvas id="mech-canvas"></canvas></div>
+    <div class="sim-controls">
+      <div class="ctrl-group">
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Launch angle</span><span class="val"><span id="mech-angle-val">45</span>&deg;</span></div>
+          <input type="range" id="mech-angle" min="10" max="80" step="1" value="45">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Initial speed</span><span class="val"><span id="mech-speed-val">25</span> m/s</span></div>
+          <input type="range" id="mech-speed" min="10" max="40" step="1" value="25">
+        </div>
+        <button class="action" id="mech-launch">Launch</button>
+        <button class="ghost" id="mech-clear">Clear trails</button>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-label">Range</div><div class="stat-value" id="mech-stat-range">—</div></div>
+        <div class="stat-card"><div class="stat-label">Max height</div><div class="stat-value" id="mech-stat-height">—</div></div>
+        <div class="stat-card"><div class="stat-label">Flight time</div><div class="stat-value" id="mech-stat-time">—</div></div>
+        <div class="stat-card"><div class="stat-label">Landing speed</div><div class="stat-value" id="mech-stat-landv">—</div></div>
+      </div>
+      <p class="footnote">R = v0<sup>2</sup>sin(2&theta;)/g, H = (v0 sin&theta;)<sup>2</sup>/2g — matches Mechanics, portion 04.</p>
+    </div>
+  </div>
+  </div>
+
+  <div class="sim-block" data-simkey="mech-collision">
+  <div class="sim-title">Momentum and collisions</div>
+  <p class="sim-desc">Two carts collide head-on. Choose elastic or perfectly inelastic and watch total momentum stay constant even as kinetic energy does not.</p>
+  <div class="sim-layout">
+    <div class="sim-stage"><canvas id="mech-col-canvas"></canvas></div>
+    <div class="sim-controls">
+      <div class="ctrl-group">
+        <div class="toggle-row" style="margin-bottom:12px;">
+          <button class="toggle-btn active" id="mech-col-elastic">Elastic</button>
+          <button class="toggle-btn" id="mech-col-inelastic">Inelastic</button>
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Mass 1</span><span class="val"><span id="mech-col-m1-val">3</span> kg</span></div>
+          <input type="range" id="mech-col-m1" min="1" max="10" step="1" value="3">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Mass 2</span><span class="val"><span id="mech-col-m2-val">5</span> kg</span></div>
+          <input type="range" id="mech-col-m2" min="1" max="10" step="1" value="5">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Speed 1 &rarr;</span><span class="val"><span id="mech-col-v1-val">5</span> m/s</span></div>
+          <input type="range" id="mech-col-v1" min="1" max="9" step="1" value="5">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Speed 2 &larr;</span><span class="val"><span id="mech-col-v2-val">4</span> m/s</span></div>
+          <input type="range" id="mech-col-v2" min="1" max="9" step="1" value="4">
+        </div>
+        <button class="action" id="mech-col-run">Run collision</button>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-label">Momentum before</div><div class="stat-value" id="mech-col-stat-pbefore">—</div></div>
+        <div class="stat-card"><div class="stat-label">Momentum after</div><div class="stat-value" id="mech-col-stat-pafter">—</div></div>
+        <div class="stat-card"><div class="stat-label">KE before</div><div class="stat-value" id="mech-col-stat-kebefore">—</div></div>
+        <div class="stat-card"><div class="stat-label">KE after</div><div class="stat-value" id="mech-col-stat-keafter">—</div></div>
+      </div>
+      <p class="footnote">p is conserved in both modes; KE is conserved only when elastic — matches Mechanics, portion 10.</p>
+    </div>
+  </div>
+  </div>
+
+  <div class="sim-block" data-simkey="mech-circular">
+  <div class="sim-title">Uniform circular motion</div>
+  <p class="sim-desc">An object moving in a circle at constant speed still accelerates, because direction keeps changing. Watch the velocity and centripetal acceleration vectors as they sweep around.</p>
+  <div class="sim-layout">
+    <div class="sim-stage"><canvas id="mech-circ-canvas"></canvas></div>
+    <div class="sim-controls">
+      <div class="ctrl-group">
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Radius</span><span class="val"><span id="mech-circ-radius-val">2.0</span> m</span></div>
+          <input type="range" id="mech-circ-radius" min="0.5" max="3" step="0.1" value="2.0">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Speed</span><span class="val"><span id="mech-circ-speed-val">3.0</span> m/s</span></div>
+          <input type="range" id="mech-circ-speed" min="0.5" max="6" step="0.1" value="3.0">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Mass</span><span class="val"><span id="mech-circ-mass-val">1.0</span> kg</span></div>
+          <input type="range" id="mech-circ-mass" min="0.5" max="5" step="0.1" value="1.0">
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-label">Centripetal a</div><div class="stat-value" id="mech-circ-stat-a">—</div></div>
+        <div class="stat-card"><div class="stat-label">Centripetal F</div><div class="stat-value" id="mech-circ-stat-f">—</div></div>
+        <div class="stat-card"><div class="stat-label">Period</div><div class="stat-value" id="mech-circ-stat-t">—</div></div>
+        <div class="stat-card"><div class="stat-label">Angular speed</div><div class="stat-value" id="mech-circ-stat-omega">—</div></div>
+      </div>
+      <p class="footnote">a_c = v<sup>2</sup>/r, F_c = m v<sup>2</sup>/r — matches Mechanics, portion 11.</p>
+    </div>
+  </div>
+  </div>
+</section>
+
+<section class="panel" data-panel="thermo">
+  <nav class="subtabs">
+    <button class="subtab active" data-chapter="thermo" data-simkey="thermo-kinetic">Kinetic theory</button>
+    <button class="subtab" data-chapter="thermo" data-simkey="thermo-piston">PV diagram</button>
+    <button class="subtab" data-chapter="thermo" data-simkey="thermo-engine">Heat engine</button>
+  </nav>
+
+  <div class="sim-block active" data-simkey="thermo-kinetic">
+  <div class="sim-title">Kinetic theory of gases</div>
+  <p class="sim-desc">Raise the temperature and watch the particles speed up. Average speed and the speed distribution both shift right — exactly what portion 11 describes.</p>
+  <div class="sim-layout">
+    <div class="sim-stage"><canvas id="thermo-canvas"></canvas></div>
+    <div class="sim-controls">
+      <div class="ctrl-group">
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Temperature</span><span class="val"><span id="thermo-temp-val">300</span> K</span></div>
+          <input type="range" id="thermo-temp" min="100" max="1000" step="10" value="300">
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-label">Avg. speed</div><div class="stat-value" id="thermo-stat-speed">—</div></div>
+        <div class="stat-card"><div class="stat-label">Rel. pressure</div><div class="stat-value" id="thermo-stat-pressure">—</div></div>
+      </div>
+      <p class="footnote">Simplified 2D model: particles collide elastically with the walls only. Speed distribution (bottom of canvas) broadens and shifts right as T rises — the Maxwell&ndash;Boltzmann behavior from portion 11.</p>
+    </div>
+  </div>
+  </div>
+
+  <div class="sim-block" data-simkey="thermo-piston">
+  <div class="sim-title">Piston and the PV diagram</div>
+  <p class="sim-desc">Drag the piston to change volume, or change temperature. The gas obeys PV = nRT — watch the trace on the PV graph and the shaded work done as volume changes.</p>
+  <div class="sim-layout">
+    <div class="sim-stage"><canvas id="thermo-piston-canvas"></canvas></div>
+    <div class="sim-controls">
+      <div class="ctrl-group">
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Volume</span><span class="val"><span id="thermo-piston-v-val">5.0</span> L</span></div>
+          <input type="range" id="thermo-piston-v" min="2" max="10" step="0.1" value="5.0">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Temperature</span><span class="val"><span id="thermo-piston-t-val">350</span> K</span></div>
+          <input type="range" id="thermo-piston-t" min="200" max="600" step="10" value="350">
+        </div>
+        <button class="ghost" id="thermo-piston-reset">Reset reference point</button>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-label">Pressure</div><div class="stat-value" id="thermo-piston-stat-p">—</div></div>
+        <div class="stat-card"><div class="stat-label">Work done</div><div class="stat-value" id="thermo-piston-stat-w">—</div></div>
+      </div>
+      <p class="footnote">PV = nRT (n R fixed); W = nRT &middot; ln(V/V&#8320;) for this isothermal path — matches Thermodynamics, portion 06.</p>
+    </div>
+  </div>
+  </div>
+
+  <div class="sim-block" data-simkey="thermo-engine">
+  <div class="sim-title">Heat engine efficiency</div>
+  <p class="sim-desc">Set the hot and cold reservoir temperatures and watch energy flow: heat in from the hot side, split into useful work and waste heat to the cold side.</p>
+  <div class="sim-layout">
+    <div class="sim-stage"><canvas id="thermo-engine-canvas"></canvas></div>
+    <div class="sim-controls">
+      <div class="ctrl-group">
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Hot reservoir T_h</span><span class="val"><span id="thermo-engine-th-val">650</span> K</span></div>
+          <input type="range" id="thermo-engine-th" min="500" max="900" step="10" value="650">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Cold reservoir T_c</span><span class="val"><span id="thermo-engine-tc-val">300</span> K</span></div>
+          <input type="range" id="thermo-engine-tc" min="200" max="450" step="10" value="300">
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-label">Efficiency</div><div class="stat-value" id="thermo-engine-stat-eff">—</div></div>
+        <div class="stat-card"><div class="stat-label">Work out</div><div class="stat-value" id="thermo-engine-stat-w">—</div></div>
+        <div class="stat-card"><div class="stat-label">Heat in (Qh)</div><div class="stat-value" id="thermo-engine-stat-qh">—</div></div>
+        <div class="stat-card"><div class="stat-label">Heat out (Qc)</div><div class="stat-value" id="thermo-engine-stat-qc">—</div></div>
+      </div>
+      <p class="footnote">e = 1 &minus; Tc/Th (Carnot limit), fixed Qh = 100 J per cycle for the animation — matches Thermodynamics, portion 08.</p>
+    </div>
+  </div>
+  </div>
+</section>
+
+<section class="panel" data-panel="wave">
+  <nav class="subtabs">
+    <button class="subtab active" data-chapter="wave" data-simkey="wave-standing">Standing waves</button>
+    <button class="subtab" data-chapter="wave" data-simkey="wave-pendulum">Pendulum</button>
+    <button class="subtab" data-chapter="wave" data-simkey="wave-interference">Interference</button>
+  </nav>
+
+  <div class="sim-block active" data-simkey="wave-standing">
+  <div class="sim-title">Standing waves on a string</div>
+  <p class="sim-desc">A string fixed at both ends only resonates at specific harmonics. Step through them and watch the nodes stay fixed while antinodes swing.</p>
+  <div class="sim-layout">
+    <div class="sim-stage"><canvas id="wave-canvas"></canvas></div>
+    <div class="sim-controls">
+      <div class="ctrl-group">
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Harmonic</span><span class="val">n = <span id="wave-harmonic-val">2</span></span></div>
+          <input type="range" id="wave-harmonic" min="1" max="6" step="1" value="2">
+        </div>
+      </div>
+      <div class="stats cols-3">
+        <div class="stat-card"><div class="stat-label">Wavelength</div><div class="stat-value" id="wave-stat-wavelength">—</div></div>
+        <div class="stat-card"><div class="stat-label">Nodes</div><div class="stat-value" id="wave-stat-nodes">—</div></div>
+        <div class="stat-card"><div class="stat-label">Frequency</div><div class="stat-value" id="wave-stat-freq">—</div></div>
+      </div>
+      <p class="footnote">&lambda; = 2L/n, f_n = n &middot; f_1 — matches Waves &amp; Oscillations, portion 09.</p>
+    </div>
+  </div>
+  </div>
+
+  <div class="sim-block" data-simkey="wave-pendulum">
+  <div class="sim-title">Simple pendulum</div>
+  <p class="sim-desc">Change the length and release angle. For small angles this is simple harmonic motion — the position trace below is a clean sine curve regardless of amplitude.</p>
+  <div class="sim-layout">
+    <div class="sim-stage"><canvas id="wave-pend-canvas"></canvas></div>
+    <div class="sim-controls">
+      <div class="ctrl-group">
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Length</span><span class="val"><span id="wave-pend-length-val">1.5</span> m</span></div>
+          <input type="range" id="wave-pend-length" min="0.5" max="3" step="0.1" value="1.5">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Release angle</span><span class="val"><span id="wave-pend-angle-val">20</span>&deg;</span></div>
+          <input type="range" id="wave-pend-angle" min="5" max="40" step="1" value="20">
+        </div>
+        <button class="ghost" id="wave-pend-restart">Restart swing</button>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-label">Period</div><div class="stat-value" id="wave-pend-stat-t">—</div></div>
+        <div class="stat-card"><div class="stat-label">Max speed</div><div class="stat-value" id="wave-pend-stat-v">—</div></div>
+      </div>
+      <p class="footnote">T = 2&pi;&radic;(L/g), small-angle approximation — matches Waves &amp; Oscillations, portions 01 and 03.</p>
+    </div>
+  </div>
+  </div>
+
+  <div class="sim-block" data-simkey="wave-interference">
+  <div class="sim-title">Superposition and interference</div>
+  <p class="sim-desc">Two waves of equal amplitude combine. Slide the phase difference between them and watch the resultant grow, shrink, and everything in between.</p>
+  <div class="sim-layout">
+    <div class="sim-stage"><canvas id="wave-interf-canvas"></canvas></div>
+    <div class="sim-controls">
+      <div class="ctrl-group">
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Phase difference</span><span class="val"><span id="wave-interf-phase-val">0</span>&deg;</span></div>
+          <input type="range" id="wave-interf-phase" min="0" max="360" step="5" value="0">
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-label">Result</div><div class="stat-value" id="wave-interf-stat-type" style="font-size:13px;">—</div></div>
+        <div class="stat-card"><div class="stat-label">Rel. amplitude</div><div class="stat-value" id="wave-interf-stat-amp">—</div></div>
+      </div>
+      <p class="footnote">0&deg; and 360&deg; are fully constructive; 180&deg; is fully destructive — matches Waves &amp; Oscillations, portion 08.</p>
+    </div>
+  </div>
+  </div>
+</section>
+
+<section class="panel" data-panel="elec">
+  <nav class="subtabs">
+    <button class="subtab active" data-chapter="elec" data-simkey="elec-circuits">Circuits</button>
+    <button class="subtab" data-chapter="elec" data-simkey="elec-coulomb">Coulomb's law</button>
+    <button class="subtab" data-chapter="elec" data-simkey="elec-capacitor">Capacitor</button>
+  </nav>
+
+  <div class="sim-block active" data-simkey="elec-circuits">
+  <div class="sim-title">Series vs. parallel circuits</div>
+  <p class="sim-desc">Switch the wiring and drag the sliders. Moving dots represent conventional current — watch how their speed changes with resistance and how the two topologies split current differently.</p>
+  <div class="sim-layout">
+    <div class="sim-stage"><canvas id="elec-canvas"></canvas></div>
+    <div class="sim-controls">
+      <div class="ctrl-group">
+        <div class="toggle-row" style="margin-bottom:12px;">
+          <button class="toggle-btn active" id="elec-mode-series">Series</button>
+          <button class="toggle-btn" id="elec-mode-parallel">Parallel</button>
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Voltage</span><span class="val"><span id="elec-voltage-val">12</span> V</span></div>
+          <input type="range" id="elec-voltage" min="1" max="24" step="1" value="12">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>R1</span><span class="val"><span id="elec-r1-val">10</span> &Omega;</span></div>
+          <input type="range" id="elec-r1" min="1" max="50" step="1" value="10">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>R2</span><span class="val"><span id="elec-r2-val">20</span> &Omega;</span></div>
+          <input type="range" id="elec-r2" min="1" max="50" step="1" value="20">
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-label">Total R</div><div class="stat-value" id="elec-stat-rtot">—</div></div>
+        <div class="stat-card"><div class="stat-label">Total I</div><div class="stat-value" id="elec-stat-itot">—</div></div>
+        <div class="stat-card"><div class="stat-label">I through R1</div><div class="stat-value" id="elec-stat-i1">—</div></div>
+        <div class="stat-card"><div class="stat-label">I through R2</div><div class="stat-value" id="elec-stat-i2">—</div></div>
+      </div>
+      <p class="footnote">Series: R_total = R1+R2, same I everywhere. Parallel: 1/R_total = 1/R1+1/R2, same V across each branch — portions 09&ndash;10.</p>
+    </div>
+  </div>
+  </div>
+
+  <div class="sim-block" data-simkey="elec-coulomb">
+  <div class="sim-title">Coulomb's law</div>
+  <p class="sim-desc">Two point charges. Flip their signs, change their strength, and change the distance between them to see how the force changes.</p>
+  <div class="sim-layout">
+    <div class="sim-stage"><canvas id="elec-coulomb-canvas"></canvas></div>
+    <div class="sim-controls">
+      <div class="ctrl-group">
+        <div class="toggle-row" style="margin-bottom:12px;">
+          <button class="toggle-btn active" id="elec-coulomb-sign1">q1: +</button>
+          <button class="toggle-btn" id="elec-coulomb-sign2">q2: +</button>
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>|q1|</span><span class="val"><span id="elec-coulomb-q1-val">4</span> &micro;C</span></div>
+          <input type="range" id="elec-coulomb-q1" min="1" max="10" step="1" value="4">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>|q2|</span><span class="val"><span id="elec-coulomb-q2-val">4</span> &micro;C</span></div>
+          <input type="range" id="elec-coulomb-q2" min="1" max="10" step="1" value="4">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Distance</span><span class="val"><span id="elec-coulomb-r-val">1.5</span> m</span></div>
+          <input type="range" id="elec-coulomb-r" min="0.5" max="3" step="0.1" value="1.5">
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-label">Force</div><div class="stat-value" id="elec-coulomb-stat-f">—</div></div>
+        <div class="stat-card"><div class="stat-label">Interaction</div><div class="stat-value" id="elec-coulomb-stat-type" style="font-size:13px;">—</div></div>
+      </div>
+      <p class="footnote">F = k q1 q2 / r&sup2;, k &asymp; 8.99&times;10&#8313; N&middot;m&sup2;/C&sup2; — matches Electricity, portion 02.</p>
+    </div>
+  </div>
+  </div>
+
+  <div class="sim-block" data-simkey="elec-capacitor">
+  <div class="sim-title">Charging a capacitor</div>
+  <p class="sim-desc">Connect the battery and watch charge build up on the plates. Voltage across the capacitor follows an exponential approach to the battery voltage.</p>
+  <div class="sim-layout">
+    <div class="sim-stage"><canvas id="elec-cap-canvas"></canvas></div>
+    <div class="sim-controls">
+      <div class="ctrl-group">
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Voltage</span><span class="val"><span id="elec-cap-v-val">9</span> V</span></div>
+          <input type="range" id="elec-cap-v" min="1" max="20" step="1" value="9">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Resistance</span><span class="val"><span id="elec-cap-r-val">200</span> &Omega;</span></div>
+          <input type="range" id="elec-cap-r" min="50" max="500" step="10" value="200">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Capacitance</span><span class="val"><span id="elec-cap-c-val">1000</span> &micro;F</span></div>
+          <input type="range" id="elec-cap-c" min="200" max="2000" step="50" value="1000">
+        </div>
+        <button class="action" id="elec-cap-charge">Connect &amp; charge</button>
+        <button class="ghost" id="elec-cap-reset">Disconnect &amp; reset</button>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-label">Charge Q</div><div class="stat-value" id="elec-cap-stat-q">—</div></div>
+        <div class="stat-card"><div class="stat-label">V across cap</div><div class="stat-value" id="elec-cap-stat-v">—</div></div>
+      </div>
+      <p class="footnote">V(t) = V&middot;(1&minus;e<sup>&minus;t/RC</sup>), Q = C&middot;V — matches Electricity, portion 05.</p>
+    </div>
+  </div>
+  </div>
+</section>
+
+</div>
+<script>
+function setupCanvas(canvas, cssW, cssH) {
+  var dpr = window.devicePixelRatio || 1;
+  canvas.style.width = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  var ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return ctx;
+}
+function fmt(n, d) { return Number(n).toFixed(d === undefined ? 1 : d); }
+
+var simRegistry = {};
+var activeSim = 'mech';
+var activeSubSim = { mech: 'mech-projectile', thermo: 'thermo-kinetic', wave: 'wave-standing', elec: 'elec-circuits' };
+var tabs = document.querySelectorAll('.tab');
+var panels = document.querySelectorAll('.panel');
+var accentMap = { mech: '#38bdf8', thermo: '#ff9d5c', wave: '#b98af7', elec: '#ffd23f' };
+tabs.forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    activeSim = btn.getAttribute('data-sim');
+    tabs.forEach(function(b) {
+      var on = b === btn;
+      b.classList.toggle('active', on);
+      b.style.background = on ? accentMap[b.getAttribute('data-sim')] : '';
+    });
+    panels.forEach(function(p) { p.classList.toggle('active', p.getAttribute('data-panel') === activeSim); });
+    document.documentElement.style.setProperty('--accent', accentMap[activeSim]);
+  });
+});
+tabs[0].style.background = accentMap.mech;
+
+var subtabs = document.querySelectorAll('.subtab');
+subtabs.forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var key = btn.getAttribute('data-simkey');
+    var chapter = btn.getAttribute('data-chapter');
+    activeSubSim[chapter] = key;
+    var panel = btn.closest('.panel');
+    panel.querySelectorAll('.subtab').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    panel.querySelectorAll('.sim-block').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-simkey') === key); });
+  });
+});
+
+/* ---------------- Mechanics: projectile motion ---------------- */
+(function() {
+  var canvas = document.getElementById('mech-canvas');
+  var W = 560, H = 340;
+  var ctx = setupCanvas(canvas, W, H);
+  var originX = 46, originY = H - 40;
+  var angleSlider = document.getElementById('mech-angle');
+  var speedSlider = document.getElementById('mech-speed');
+  var angleVal = document.getElementById('mech-angle-val');
+  var speedVal = document.getElementById('mech-speed-val');
+  var trails = [];
+  var proj = null;
+  var g = 9.8;
+  var lastLanding = null;
+
+  angleSlider.addEventListener('input', function() { angleVal.textContent = angleSlider.value; });
+  speedSlider.addEventListener('input', function() { speedVal.textContent = speedSlider.value; });
+
+  document.getElementById('mech-launch').addEventListener('click', function() {
+    var angle = parseFloat(angleSlider.value) * Math.PI / 180;
+    var v0 = parseFloat(speedSlider.value);
+    var vx0 = v0 * Math.cos(angle);
+    var vy0 = v0 * Math.sin(angle);
+    var T = 2 * vy0 / g;
+    var R = vx0 * T;
+    var H_max = (vy0 * vy0) / (2 * g);
+    var availW = W - originX - 30;
+    var availH = originY - 30;
+    var scale = Math.min(availW / Math.max(R, 8), availH / Math.max(H_max, 4), 16);
+    proj = { vx0: vx0, vy0: vy0, T: T, R: R, Hmax: H_max, scale: scale, t: 0, path: [] };
+  });
+  document.getElementById('mech-clear').addEventListener('click', function() { trails = []; });
+
+  function update(dt) {
+    if (!proj) return;
+    proj.t += dt;
+    if (proj.t >= proj.T) {
+      var x = proj.R, y = 0;
+      proj.path.push([originX + x * proj.scale, originY - y * proj.scale]);
+      trails.push(proj.path);
+      if (trails.length > 4) trails.shift();
+      lastLanding = {
+        range: proj.R, height: proj.Hmax, time: proj.T,
+        landv: Math.sqrt(proj.vx0 * proj.vx0 + proj.vy0 * proj.vy0)
+      };
+      document.getElementById('mech-stat-range').textContent = fmt(lastLanding.range, 1) + ' m';
+      document.getElementById('mech-stat-height').textContent = fmt(lastLanding.height, 1) + ' m';
+      document.getElementById('mech-stat-time').textContent = fmt(lastLanding.time, 2) + ' s';
+      document.getElementById('mech-stat-landv').textContent = fmt(lastLanding.landv, 1) + ' m/s';
+      proj = null;
+      return;
+    }
+    var x = proj.vx0 * proj.t;
+    var y = proj.vy0 * proj.t - 0.5 * g * proj.t * proj.t;
+    proj.path.push([originX + x * proj.scale, originY - y * proj.scale]);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = '#232a37';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, originY); ctx.lineTo(W, originY); ctx.stroke();
+    trails.forEach(function(path, i) {
+      ctx.strokeStyle = 'rgba(56,189,248,' + (0.12 + i * 0.06) + ')';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      path.forEach(function(pt, j) { j === 0 ? ctx.moveTo(pt[0], pt[1]) : ctx.lineTo(pt[0], pt[1]); });
+      ctx.stroke();
+    });
+    if (proj) {
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      proj.path.forEach(function(pt, j) { j === 0 ? ctx.moveTo(pt[0], pt[1]) : ctx.lineTo(pt[0], pt[1]); });
+      ctx.stroke();
+      var last = proj.path[proj.path.length - 1];
+      if (last) {
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath(); ctx.arc(last[0], last[1], 5, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.fillStyle = '#8b96a5';
+    ctx.beginPath(); ctx.arc(originX, originY, 4, 0, Math.PI * 2); ctx.fill();
+  }
+
+  simRegistry['mech-projectile'] = { update: update, draw: draw };
+})();
+
+/* ---------------- Mechanics: collisions ---------------- */
+(function() {
+  var canvas = document.getElementById('mech-col-canvas');
+  var W = 560, H = 340;
+  var ctx = setupCanvas(canvas, W, H);
+  var trackY = H / 2;
+  var m1Slider = document.getElementById('mech-col-m1');
+  var m2Slider = document.getElementById('mech-col-m2');
+  var v1Slider = document.getElementById('mech-col-v1');
+  var v2Slider = document.getElementById('mech-col-v2');
+  var mode = 'elastic';
+  var PXPERM = 30, cartW = 46, cartH = 34;
+  var state = null;
+
+  function bindSlider(s, out) { s.addEventListener('input', function () { out.textContent = s.value; }); }
+  bindSlider(m1Slider, document.getElementById('mech-col-m1-val'));
+  bindSlider(m2Slider, document.getElementById('mech-col-m2-val'));
+  bindSlider(v1Slider, document.getElementById('mech-col-v1-val'));
+  bindSlider(v2Slider, document.getElementById('mech-col-v2-val'));
+
+  var elasticBtn = document.getElementById('mech-col-elastic');
+  var inelasticBtn = document.getElementById('mech-col-inelastic');
+  elasticBtn.addEventListener('click', function () { mode = 'elastic'; elasticBtn.classList.add('active'); inelasticBtn.classList.remove('active'); elasticBtn.style.background = '#38bdf8'; inelasticBtn.style.background = ''; });
+  inelasticBtn.addEventListener('click', function () { mode = 'inelastic'; inelasticBtn.classList.add('active'); elasticBtn.classList.remove('active'); inelasticBtn.style.background = '#38bdf8'; elasticBtn.style.background = ''; });
+  elasticBtn.style.background = '#38bdf8';
+
+  function fmtP(v) { return fmt(v, 1) + ' kg\u00b7m/s'; }
+
+  function reset() {
+    var m1 = parseFloat(m1Slider.value), m2 = parseFloat(m2Slider.value);
+    var v1 = parseFloat(v1Slider.value), v2 = -parseFloat(v2Slider.value);
+    state = { m1: m1, m2: m2, v1: v1, v2: v2, x1: 40, x2: W - 40 - cartW, collided: false };
+    var pBefore = m1 * v1 + m2 * v2;
+    var keBefore = 0.5 * m1 * v1 * v1 + 0.5 * m2 * v2 * v2;
+    document.getElementById('mech-col-stat-pbefore').textContent = fmtP(pBefore);
+    document.getElementById('mech-col-stat-pafter').textContent = '\u2014';
+    document.getElementById('mech-col-stat-kebefore').textContent = fmt(keBefore, 1) + ' J';
+    document.getElementById('mech-col-stat-keafter').textContent = '\u2014';
+  }
+  document.getElementById('mech-col-run').addEventListener('click', reset);
+  reset();
+
+  function update(dt) {
+    if (!state) return;
+    var s = state;
+    s.x1 += s.v1 * dt * PXPERM;
+    s.x2 += s.v2 * dt * PXPERM;
+    if (!s.collided && s.x1 + cartW >= s.x2) {
+      var m1 = s.m1, m2 = s.m2, v1 = s.v1, v2 = s.v2;
+      if (mode === 'inelastic') {
+        var vf = (m1 * v1 + m2 * v2) / (m1 + m2);
+        s.v1 = vf; s.v2 = vf;
+      } else {
+        s.v1 = ((m1 - m2) * v1 + 2 * m2 * v2) / (m1 + m2);
+        s.v2 = ((m2 - m1) * v2 + 2 * m1 * v1) / (m1 + m2);
+      }
+      s.collided = true;
+      var pAfter = m1 * s.v1 + m2 * s.v2;
+      var keAfter = 0.5 * m1 * s.v1 * s.v1 + 0.5 * m2 * s.v2 * s.v2;
+      document.getElementById('mech-col-stat-pafter').textContent = fmtP(pAfter);
+      document.getElementById('mech-col-stat-keafter').textContent = fmt(keAfter, 1) + ' J';
+      var overlap = (s.x1 + cartW) - s.x2;
+      s.x1 -= overlap / 2; s.x2 += overlap / 2;
+    }
+    if (s.x1 < 10) s.x1 = 10;
+    if (s.x2 > W - 10 - cartW) s.x2 = W - 10 - cartW;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = '#232a37'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, trackY + cartH / 2 + 6); ctx.lineTo(W, trackY + cartH / 2 + 6); ctx.stroke();
+    if (!state) return;
+    var s = state;
+    ctx.fillStyle = 'rgba(56,189,248,0.22)'; ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2;
+    ctx.fillRect(s.x1, trackY - cartH / 2, cartW, cartH);
+    ctx.strokeRect(s.x1, trackY - cartH / 2, cartW, cartH);
+    ctx.fillStyle = 'rgba(255,157,92,0.22)'; ctx.strokeStyle = '#ff9d5c';
+    ctx.fillRect(s.x2, trackY - cartH / 2, cartW, cartH);
+    ctx.strokeRect(s.x2, trackY - cartH / 2, cartW, cartH);
+    ctx.fillStyle = '#8b96a5'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'center';
+    ctx.fillText('m1', s.x1 + cartW / 2, trackY - cartH / 2 - 8);
+    ctx.fillText('m2', s.x2 + cartW / 2, trackY - cartH / 2 - 8);
+  }
+
+  simRegistry['mech-collision'] = { update: update, draw: draw };
+})();
+
+/* ---------------- Mechanics: circular motion ---------------- */
+(function() {
+  var canvas = document.getElementById('mech-circ-canvas');
+  var W = 560, H = 340;
+  var ctx = setupCanvas(canvas, W, H);
+  var cx = W / 2, cy = H / 2;
+  var radiusSlider = document.getElementById('mech-circ-radius');
+  var speedSlider = document.getElementById('mech-circ-speed');
+  var massSlider = document.getElementById('mech-circ-mass');
+  var angle = 0, PXPERM = 55;
+
+  function bindSlider(s, out, d) { s.addEventListener('input', function () { out.textContent = fmt(parseFloat(s.value), d); }); }
+  bindSlider(radiusSlider, document.getElementById('mech-circ-radius-val'), 1);
+  bindSlider(speedSlider, document.getElementById('mech-circ-speed-val'), 1);
+  bindSlider(massSlider, document.getElementById('mech-circ-mass-val'), 1);
+
+  function drawArrowHead(x, y, ang, color) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-8, 4); ctx.lineTo(-8, -4); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function update(dt) {
+    var r = parseFloat(radiusSlider.value), v = parseFloat(speedSlider.value), m = parseFloat(massSlider.value);
+    var omega = v / r;
+    angle += omega * dt;
+    var ac = v * v / r, fc = m * ac, T = 2 * Math.PI * r / v;
+    document.getElementById('mech-circ-stat-a').textContent = fmt(ac, 2) + ' m/s\u00b2';
+    document.getElementById('mech-circ-stat-f').textContent = fmt(fc, 2) + ' N';
+    document.getElementById('mech-circ-stat-t').textContent = fmt(T, 2) + ' s';
+    document.getElementById('mech-circ-stat-omega').textContent = fmt(omega, 2) + ' rad/s';
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var rPx = parseFloat(radiusSlider.value) * PXPERM;
+    ctx.strokeStyle = '#232a37'; ctx.lineWidth = 1.4; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.arc(cx, cy, rPx, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#8b96a5';
+    ctx.beginPath(); ctx.arc(cx, cy, 3.5, 0, Math.PI * 2); ctx.fill();
+    var px = cx + rPx * Math.cos(angle), py = cy + rPx * Math.sin(angle);
+    var tx = -Math.sin(angle), ty = Math.cos(angle);
+    ctx.strokeStyle = '#eaeef2'; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + tx * 46, py + ty * 46); ctx.stroke();
+    drawArrowHead(px + tx * 46, py + ty * 46, Math.atan2(ty, tx), '#eaeef2');
+    var nx = (cx - px) / rPx, ny = (cy - py) / rPx;
+    ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + nx * 40, py + ny * 40); ctx.stroke();
+    drawArrowHead(px + nx * 40, py + ny * 40, Math.atan2(ny, nx), '#38bdf8');
+    ctx.fillStyle = '#38bdf8';
+    ctx.beginPath(); ctx.arc(px, py, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#57616f'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'left';
+    ctx.fillText('v (tangent)', px + tx * 52, py + ty * 52);
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText('a_c', px + nx * 46, py + ny * 46);
+  }
+
+  simRegistry['mech-circular'] = { update: update, draw: draw };
+})();
+
+/* ---------------- Thermodynamics: kinetic theory ---------------- */
+(function() {
+  var canvas = document.getElementById('thermo-canvas');
+  var W = 560, H = 340;
+  var ctx = setupCanvas(canvas, W, H);
+  var boxX = 20, boxY = 20, boxW = W - 40, boxH = 220;
+  var histY = boxY + boxH + 20, histH = 60;
+  var tempSlider = document.getElementById('thermo-temp');
+  var tempVal = document.getElementById('thermo-temp-val');
+  var N = 46, r = 3.4;
+  var particles = [];
+  var baseSpeed = 70;
+
+  for (var i = 0; i < N; i++) {
+    var ang = Math.random() * Math.PI * 2;
+    particles.push({
+      x: boxX + r + Math.random() * (boxW - 2 * r),
+      y: boxY + r + Math.random() * (boxH - 2 * r),
+      vx: Math.cos(ang) * baseSpeed,
+      vy: Math.sin(ang) * baseSpeed
+    });
+  }
+  tempSlider.addEventListener('input', function() { tempVal.textContent = tempSlider.value; });
+
+  function update(dt) {
+    var T = parseFloat(tempSlider.value);
+    var targetSpeed = baseSpeed * Math.sqrt(T / 300);
+    var totalSpeed = 0, totalSq = 0;
+    particles.forEach(function(p) {
+      var v = Math.hypot(p.vx, p.vy) || 0.001;
+      var newSpeed = v + (targetSpeed - v) * 0.05;
+      p.vx = p.vx / v * newSpeed;
+      p.vy = p.vy / v * newSpeed;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      if (p.x < boxX + r) { p.x = boxX + r; p.vx *= -1; }
+      if (p.x > boxX + boxW - r) { p.x = boxX + boxW - r; p.vx *= -1; }
+      if (p.y < boxY + r) { p.y = boxY + r; p.vy *= -1; }
+      if (p.y > boxY + boxH - r) { p.y = boxY + boxH - r; p.vy *= -1; }
+      var sp = Math.hypot(p.vx, p.vy);
+      totalSpeed += sp;
+      totalSq += sp * sp;
+    });
+    var avg = totalSpeed / particles.length;
+    document.getElementById('thermo-stat-speed').textContent = fmt(avg, 0) + ' px/s';
+    document.getElementById('thermo-stat-pressure').textContent = fmt((totalSq / particles.length) / (baseSpeed * baseSpeed), 2) + 'x';
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = '#232a37'; ctx.lineWidth = 1.5;
+    ctx.strokeRect(boxX, boxY, boxW, boxH);
+    ctx.fillStyle = '#ff9d5c';
+    particles.forEach(function(p) {
+      ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+    });
+    var bins = 8, counts = new Array(bins).fill(0);
+    var maxSpeed = baseSpeed * 2.2;
+    particles.forEach(function(p) {
+      var sp = Math.hypot(p.vx, p.vy);
+      var idx = Math.min(bins - 1, Math.floor((sp / maxSpeed) * bins));
+      counts[idx]++;
+    });
+    var maxCount = Math.max.apply(null, counts.concat([1]));
+    var barW = (boxW - (bins - 1) * 4) / bins;
+    for (var i = 0; i < bins; i++) {
+      var bh = (counts[i] / maxCount) * histH;
+      ctx.fillStyle = '#ff9d5c';
+      ctx.globalAlpha = 0.75;
+      ctx.fillRect(boxX + i * (barW + 4), histY + histH - bh, barW, bh);
+      ctx.globalAlpha = 1;
+    }
+    ctx.strokeStyle = '#3c4655'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(boxX, histY + histH); ctx.lineTo(boxX + boxW, histY + histH); ctx.stroke();
+    ctx.fillStyle = '#57616f'; ctx.font = '10px JetBrains Mono';
+    ctx.fillText('speed distribution (slow \u2192 fast)', boxX, histY + histH + 16);
+  }
+
+  simRegistry['thermo-kinetic'] = { update: update, draw: draw };
+})();
+
+/* ---------------- Thermodynamics: piston / PV diagram ---------------- */
+(function() {
+  var canvas = document.getElementById('thermo-piston-canvas');
+  var W = 560, H = 340;
+  var ctx = setupCanvas(canvas, W, H);
+  var vSlider = document.getElementById('thermo-piston-v');
+  var tSlider = document.getElementById('thermo-piston-t');
+  var k = 5;
+  var V0 = parseFloat(vSlider.value);
+
+  function bindSlider(s, out, d) { s.addEventListener('input', function () { out.textContent = fmt(parseFloat(s.value), d); }); }
+  bindSlider(vSlider, document.getElementById('thermo-piston-v-val'), 1);
+  bindSlider(tSlider, document.getElementById('thermo-piston-t-val'), 0);
+  document.getElementById('thermo-piston-reset').addEventListener('click', function () { V0 = parseFloat(vSlider.value); });
+
+  function update(dt) {
+    var V = parseFloat(vSlider.value), T = parseFloat(tSlider.value);
+    var P = k * T / V;
+    var Wd = k * T * Math.log(V / V0);
+    document.getElementById('thermo-piston-stat-p').textContent = fmt(P, 0) + ' kPa';
+    document.getElementById('thermo-piston-stat-w').textContent = fmt(Wd, 0) + ' J';
+  }
+
+  function drawPiston(x0, y0, w, h, V) {
+    var maxV = 10, minV = 2;
+    var frac = (V - minV) / (maxV - minV);
+    var pistonX = x0 + w * (0.15 + 0.65 * (1 - frac));
+    ctx.strokeStyle = '#3c4655'; ctx.lineWidth = 2;
+    ctx.strokeRect(x0, y0, w, h);
+    ctx.fillStyle = 'rgba(255,157,92,0.18)';
+    ctx.fillRect(pistonX, y0, x0 + w - pistonX, h);
+    ctx.fillStyle = '#3a4452';
+    ctx.fillRect(pistonX - 8, y0 - 6, 8, h + 12);
+    return pistonX;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var V = parseFloat(vSlider.value), T = parseFloat(tSlider.value);
+    var P = k * T / V;
+    drawPiston(20, 40, 230, 140, V);
+    ctx.fillStyle = '#57616f'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'left';
+    ctx.fillText('gas', 30, 120);
+
+    var gx = 300, gy = 40, gw = 230, gh = 240;
+    ctx.strokeStyle = '#232a37'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx, gy + gh); ctx.lineTo(gx + gw, gy + gh); ctx.stroke();
+    ctx.fillStyle = '#57616f'; ctx.font = '10px JetBrains Mono';
+    ctx.fillText('V', gx + gw - 10, gy + gh + 16);
+    ctx.save(); ctx.translate(gx - 18, gy + 10); ctx.rotate(-Math.PI / 2); ctx.fillText('P', 0, 0); ctx.restore();
+
+    var maxP = k * 600 / 2;
+    ctx.strokeStyle = '#ff9d5c'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (var vv = 2; vv <= 10; vv += 0.1) {
+      var pp = k * T / vv;
+      var xx = gx + ((vv - 2) / 8) * gw;
+      var yy = gy + gh - Math.min(pp / maxP, 1) * gh;
+      vv === 2 ? ctx.moveTo(xx, yy) : ctx.lineTo(xx, yy);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,157,92,0.22)';
+    ctx.beginPath();
+    var lo = Math.min(V0, V), hi = Math.max(V0, V);
+    var startX = gx + ((lo - 2) / 8) * gw;
+    ctx.moveTo(startX, gy + gh);
+    for (var vv2 = lo; vv2 <= hi; vv2 += 0.1) {
+      var pp2 = k * T / vv2;
+      var xx2 = gx + ((vv2 - 2) / 8) * gw;
+      var yy2 = gy + gh - Math.min(pp2 / maxP, 1) * gh;
+      ctx.lineTo(xx2, yy2);
+    }
+    ctx.lineTo(gx + ((hi - 2) / 8) * gw, gy + gh);
+    ctx.closePath(); ctx.fill();
+
+    var curX = gx + ((V - 2) / 8) * gw, curY = gy + gh - Math.min(P / maxP, 1) * gh;
+    ctx.fillStyle = '#eaeef2';
+    ctx.beginPath(); ctx.arc(curX, curY, 4, 0, Math.PI * 2); ctx.fill();
+    var refP = k * T / V0;
+    var refX = gx + ((V0 - 2) / 8) * gw, refY = gy + gh - Math.min(refP / maxP, 1) * gh;
+    ctx.strokeStyle = '#8b96a5'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(refX, refY, 4, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#8b96a5'; ctx.font = '9px JetBrains Mono';
+    ctx.fillText('ref', refX + 6, refY - 6);
+  }
+
+  simRegistry['thermo-piston'] = { update: update, draw: draw };
+})();
+
+/* ---------------- Thermodynamics: heat engine ---------------- */
+(function() {
+  var canvas = document.getElementById('thermo-engine-canvas');
+  var W = 560, H = 340;
+  var ctx = setupCanvas(canvas, W, H);
+  var thSlider = document.getElementById('thermo-engine-th');
+  var tcSlider = document.getElementById('thermo-engine-tc');
+  var flowT = 0, Qh_fixed = 100;
+
+  function bindSlider(s, out) { s.addEventListener('input', function () { out.textContent = s.value; }); }
+  bindSlider(thSlider, document.getElementById('thermo-engine-th-val'));
+  bindSlider(tcSlider, document.getElementById('thermo-engine-tc-val'));
+
+  function compute() {
+    var Th = parseFloat(thSlider.value), Tc = parseFloat(tcSlider.value);
+    var eff = 1 - Tc / Th;
+    var Wd = eff * Qh_fixed;
+    return { eff: eff, W: Wd, Qc: Qh_fixed - Wd };
+  }
+
+  function update(dt) {
+    flowT += dt;
+    var r = compute();
+    document.getElementById('thermo-engine-stat-eff').textContent = fmt(r.eff * 100, 1) + '%';
+    document.getElementById('thermo-engine-stat-w').textContent = fmt(r.W, 1) + ' J';
+    document.getElementById('thermo-engine-stat-qh').textContent = fmt(Qh_fixed, 0) + ' J';
+    document.getElementById('thermo-engine-stat-qc').textContent = fmt(r.Qc, 1) + ' J';
+  }
+
+  function flowDots(x0, y0, x1, y1, rate, color) {
+    var n = Math.max(Math.round(rate / 15), 1);
+    var dx = x1 - x0, dy = y1 - y0;
+    for (var i = 0; i < n; i++) {
+      var frac = (flowT * 0.6 + i / n) % 1;
+      var x = x0 + dx * frac, y = y0 + dy * frac;
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var r = compute();
+    ctx.fillStyle = 'rgba(255,138,91,0.16)'; ctx.strokeStyle = '#ff8a5b'; ctx.lineWidth = 1.6;
+    ctx.fillRect(20, 30, 150, 70); ctx.strokeRect(20, 30, 150, 70);
+    ctx.fillStyle = 'rgba(91,192,255,0.16)'; ctx.strokeStyle = '#5bc0ff';
+    ctx.fillRect(20, 240, 150, 70); ctx.strokeRect(20, 240, 150, 70);
+    ctx.fillStyle = '#ff8a5b'; ctx.font = '11px JetBrains Mono'; ctx.textAlign = 'left';
+    ctx.fillText('hot reservoir Th', 32, 70);
+    ctx.fillStyle = '#5bc0ff';
+    ctx.fillText('cold reservoir Tc', 32, 280);
+
+    ctx.strokeStyle = '#eaeef2'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(330, 170, 58, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#eaeef2'; ctx.font = '12px JetBrains Mono'; ctx.textAlign = 'center';
+    ctx.fillText('engine', 330, 174);
+
+    ctx.strokeStyle = '#ff8a5b'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(170, 80); ctx.lineTo(285, 145); ctx.stroke();
+    flowDots(170, 80, 285, 145, Qh_fixed, '#ff8a5b');
+    ctx.strokeStyle = '#5bc0ff';
+    ctx.beginPath(); ctx.moveTo(285, 195); ctx.lineTo(170, 260); ctx.stroke();
+    flowDots(285, 195, 170, 260, r.Qc, '#5bc0ff');
+    ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(388, 170); ctx.lineTo(500, 170); ctx.stroke();
+    flowDots(388, 170, 500, 170, r.W, '#4ade80');
+    ctx.fillStyle = '#4ade80'; ctx.font = '11px JetBrains Mono'; ctx.textAlign = 'center';
+    ctx.fillText('W (useful work)', 500, 155);
+  }
+
+  simRegistry['thermo-engine'] = { update: update, draw: draw };
+})();
+
+/* ---------------- Waves: standing waves ---------------- */
+(function() {
+  var canvas = document.getElementById('wave-canvas');
+  var W = 560, H = 340;
+  var ctx = setupCanvas(canvas, W, H);
+  var padX = 30, midY = H / 2, amp = 90;
+  var harmonicSlider = document.getElementById('wave-harmonic');
+  var harmonicVal = document.getElementById('wave-harmonic-val');
+  var phase = 0;
+
+  harmonicSlider.addEventListener('input', function() {
+    harmonicVal.textContent = harmonicSlider.value;
+    updateStats();
+  });
+  function updateStats() {
+    var n = parseInt(harmonicSlider.value, 10);
+    document.getElementById('wave-stat-wavelength').textContent = fmt(2 / n, 2) + ' L';
+    document.getElementById('wave-stat-nodes').textContent = (n + 1);
+    document.getElementById('wave-stat-freq').textContent = n + ' \u00d7 f\u2081';
+  }
+  updateStats();
+
+  function update(dt) { phase += dt * 2.4; }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var n = parseInt(harmonicSlider.value, 10);
+    var span = W - 2 * padX;
+    ctx.strokeStyle = '#232a37'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padX, midY); ctx.lineTo(W - padX, midY); ctx.stroke();
+    ctx.strokeStyle = 'rgba(185,138,247,0.9)'; ctx.lineWidth = 2.6;
+    ctx.beginPath();
+    for (var px = 0; px <= span; px += 2) {
+      var xFrac = px / span;
+      var y = amp * Math.sin(n * Math.PI * xFrac) * Math.cos(phase);
+      var cx = padX + px, cy = midY - y;
+      px === 0 ? ctx.moveTo(cx, cy) : ctx.lineTo(cx, cy);
+    }
+    ctx.stroke();
+    ctx.fillStyle = '#eaeef2';
+    for (var k = 0; k <= n; k++) {
+      var nx = padX + (k / n) * span;
+      ctx.beginPath(); ctx.arc(nx, midY, 4.5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = '#57616f'; ctx.font = '10px JetBrains Mono';
+    ctx.fillText('fixed end', padX - 6, midY + 24);
+    ctx.fillText('fixed end', W - padX - 46, midY + 24);
+  }
+
+  simRegistry['wave-standing'] = { update: update, draw: draw };
+})();
+
+/* ---------------- Waves: simple pendulum ---------------- */
+(function() {
+  var canvas = document.getElementById('wave-pend-canvas');
+  var W = 560, H = 340;
+  var ctx = setupCanvas(canvas, W, H);
+  var lengthSlider = document.getElementById('wave-pend-length');
+  var angleSlider = document.getElementById('wave-pend-angle');
+  var g = 9.8, t = 0, trace = [];
+  var pivot = { x: W / 2, y: 40 }, PXPERM = 70;
+
+  function bindSlider(s, out, d) { s.addEventListener('input', function () { out.textContent = fmt(parseFloat(s.value), d); restart(); }); }
+  bindSlider(lengthSlider, document.getElementById('wave-pend-length-val'), 1);
+  bindSlider(angleSlider, document.getElementById('wave-pend-angle-val'), 0);
+
+  function restart() { t = 0; trace = []; }
+  document.getElementById('wave-pend-restart').addEventListener('click', restart);
+
+  function update(dt) {
+    t += dt;
+    var L = parseFloat(lengthSlider.value);
+    var theta0 = parseFloat(angleSlider.value) * Math.PI / 180;
+    var omega = Math.sqrt(g / L);
+    var T = 2 * Math.PI / omega;
+    var vmax = theta0 * L * omega;
+    document.getElementById('wave-pend-stat-t').textContent = fmt(T, 2) + ' s';
+    document.getElementById('wave-pend-stat-v').textContent = fmt(vmax, 2) + ' m/s';
+    var theta = theta0 * Math.cos(omega * t);
+    trace.push(theta / theta0);
+    if (trace.length > 220) trace.shift();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var L = parseFloat(lengthSlider.value);
+    var theta0 = parseFloat(angleSlider.value) * Math.PI / 180;
+    var omega = Math.sqrt(g / L);
+    var theta = theta0 * Math.cos(omega * t);
+    var bx = pivot.x + L * PXPERM * Math.sin(theta);
+    var by = pivot.y + L * PXPERM * Math.cos(theta);
+
+    ctx.strokeStyle = '#232a37'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(pivot.x, pivot.y); ctx.lineTo(pivot.x, pivot.y + L * PXPERM + 16); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = '#eaeef2'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(pivot.x, pivot.y); ctx.lineTo(bx, by); ctx.stroke();
+    ctx.fillStyle = '#57616f';
+    ctx.beginPath(); ctx.arc(pivot.x, pivot.y, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#b98af7';
+    ctx.beginPath(); ctx.arc(bx, by, 11, 0, Math.PI * 2); ctx.fill();
+
+    var gy0 = 210, gh = 100, gx0 = 30, gw = W - 60;
+    ctx.strokeStyle = '#232a37'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(gx0, gy0 + gh / 2); ctx.lineTo(gx0 + gw, gy0 + gh / 2); ctx.stroke();
+    ctx.strokeStyle = '#b98af7'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (var i = 0; i < trace.length; i++) {
+      var x = gx0 + gw - (trace.length - i);
+      var y = gy0 + gh / 2 - trace[i] * (gh / 2 - 6);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.fillStyle = '#57616f'; ctx.font = '9.5px JetBrains Mono'; ctx.textAlign = 'left';
+    ctx.fillText('angle vs. time', gx0, gy0 - 6);
+  }
+
+  simRegistry['wave-pendulum'] = { update: update, draw: draw };
+})();
+
+/* ---------------- Waves: interference ---------------- */
+(function() {
+  var canvas = document.getElementById('wave-interf-canvas');
+  var W = 560, H = 340;
+  var ctx = setupCanvas(canvas, W, H);
+  var phaseSlider = document.getElementById('wave-interf-phase');
+  var t = 0;
+
+  phaseSlider.addEventListener('input', function () {
+    document.getElementById('wave-interf-phase-val').textContent = phaseSlider.value;
+    updateStats();
+  });
+  function updateStats() {
+    var phaseRad = parseFloat(phaseSlider.value) * Math.PI / 180;
+    var relAmp = 2 * Math.abs(Math.cos(phaseRad / 2));
+    var label = relAmp > 1.85 ? 'Constructive' : (relAmp < 0.15 ? 'Destructive' : 'Partial');
+    document.getElementById('wave-interf-stat-type').textContent = label;
+    document.getElementById('wave-interf-stat-amp').textContent = fmt(relAmp, 2) + 'x';
+  }
+  updateStats();
+
+  function update(dt) { t += dt * 2.4; }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var phaseRad = parseFloat(phaseSlider.value) * Math.PI / 180;
+    var padX = 30, span = W - 2 * padX;
+    var rows = [
+      { y: 70, amp: 36, phase: 0, color: '#8b96a5', label: 'wave 1' },
+      { y: 150, amp: 36, phase: phaseRad, color: '#8b96a5', label: 'wave 2' },
+      { y: 255, amp: 36, phase: 0, color: '#b98af7', label: 'resultant', resultant: true }
+    ];
+    rows.forEach(function (row) {
+      ctx.strokeStyle = row.color; ctx.lineWidth = row.resultant ? 2.6 : 1.6;
+      ctx.beginPath();
+      for (var px = 0; px <= span; px += 3) {
+        var xFrac = (px / span) * 4 * Math.PI;
+        var y;
+        if (row.resultant) {
+          y = row.amp * Math.sin(xFrac - t) + row.amp * Math.sin(xFrac - t + phaseRad);
+        } else {
+          y = row.amp * Math.sin(xFrac - t + row.phase);
+        }
+        var cx = padX + px, cy = row.y - y;
+        px === 0 ? ctx.moveTo(cx, cy) : ctx.lineTo(cx, cy);
+      }
+      ctx.stroke();
+      ctx.strokeStyle = '#232a37'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(padX, row.y); ctx.lineTo(padX + span, row.y); ctx.stroke();
+      ctx.fillStyle = row.color; ctx.font = '9.5px JetBrains Mono'; ctx.textAlign = 'left';
+      ctx.fillText(row.label, padX, row.y - row.amp - 10);
+    });
+  }
+
+  simRegistry['wave-interference'] = { update: update, draw: draw };
+})();
+
+/* ---------------- Electricity: circuits ---------------- */
+(function() {
+  var canvas = document.getElementById('elec-canvas');
+  var W = 560, H = 340;
+  var ctx = setupCanvas(canvas, W, H);
+  var mode = 'series';
+  var voltageSlider = document.getElementById('elec-voltage');
+  var r1Slider = document.getElementById('elec-r1');
+  var r2Slider = document.getElementById('elec-r2');
+  var flowOffset = 0;
+
+  function bindSlider(slider, out) { slider.addEventListener('input', function() { out.textContent = slider.value; }); }
+  bindSlider(voltageSlider, document.getElementById('elec-voltage-val'));
+  bindSlider(r1Slider, document.getElementById('elec-r1-val'));
+  bindSlider(r2Slider, document.getElementById('elec-r2-val'));
+
+  var seriesBtn = document.getElementById('elec-mode-series');
+  var parallelBtn = document.getElementById('elec-mode-parallel');
+  seriesBtn.addEventListener('click', function() { mode = 'series'; seriesBtn.classList.add('active'); parallelBtn.classList.remove('active'); seriesBtn.style.background = '#ffd23f'; parallelBtn.style.background = ''; });
+  parallelBtn.addEventListener('click', function() { mode = 'parallel'; parallelBtn.classList.add('active'); seriesBtn.classList.remove('active'); parallelBtn.style.background = '#ffd23f'; seriesBtn.style.background = ''; });
+  seriesBtn.style.background = '#ffd23f';
+
+  function compute() {
+    var V = parseFloat(voltageSlider.value);
+    var R1 = parseFloat(r1Slider.value);
+    var R2 = parseFloat(r2Slider.value);
+    if (mode === 'series') {
+      var Rtot = R1 + R2;
+      var I = V / Rtot;
+      return { Rtot: Rtot, Itot: I, I1: I, I2: I };
+    } else {
+      var Rtot2 = 1 / (1 / R1 + 1 / R2);
+      var I1 = V / R1, I2 = V / R2;
+      return { Rtot: Rtot2, Itot: I1 + I2, I1: I1, I2: I2 };
+    }
+  }
+
+  function drawResistor(x0, x1, y, label) {
+    var n = 6, h = 9;
+    ctx.beginPath();
+    ctx.moveTo(x0, y);
+    var seg = (x1 - x0) / n;
+    for (var i = 0; i < n; i++) ctx.lineTo(x0 + seg * (i + 0.5), y + (i % 2 === 0 ? -h : h));
+    ctx.lineTo(x1, y);
+    ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 2.4; ctx.stroke();
+    ctx.fillStyle = '#8b96a5'; ctx.font = '11px JetBrains Mono'; ctx.textAlign = 'center';
+    ctx.fillText(label, (x0 + x1) / 2, y - 20);
+  }
+  function drawBattery(x, y) {
+    ctx.strokeStyle = '#eaeef2'; ctx.lineWidth = 3.6;
+    ctx.beginPath(); ctx.moveTo(x - 12, y - 9); ctx.lineTo(x + 12, y - 9); ctx.stroke();
+    ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(x - 6, y + 9); ctx.lineTo(x + 6, y + 9); ctx.stroke();
+  }
+  function dotsAlongPath(pts, offset, current, color) {
+    var totalLen = 0, segLens = [];
+    for (var i = 0; i < pts.length - 1; i++) {
+      var d = Math.hypot(pts[i+1][0]-pts[i][0], pts[i+1][1]-pts[i][1]);
+      segLens.push(d); totalLen += d;
+    }
+    var speed = Math.max(Math.min(current * 10, 60), 4);
+    var spacing = 26;
+    var count = Math.max(Math.floor(totalLen / spacing), 1);
+    ctx.fillStyle = color;
+    for (var k = 0; k < count; k++) {
+      var d2 = (offset * speed + k * spacing) % totalLen;
+      var acc = 0;
+      for (var s = 0; s < segLens.length; s++) {
+        if (d2 <= acc + segLens[s]) {
+          var t = (d2 - acc) / segLens[s];
+          var x = pts[s][0] + (pts[s+1][0]-pts[s][0]) * t;
+          var y = pts[s][1] + (pts[s+1][1]-pts[s][1]) * t;
+          ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
+          break;
+        }
+        acc += segLens[s];
+      }
+    }
+  }
+
+  function update(dt) {
+    flowOffset += dt;
+    var r = compute();
+    document.getElementById('elec-stat-rtot').textContent = fmt(r.Rtot, 1) + ' \u03a9';
+    document.getElementById('elec-stat-itot').textContent = fmt(r.Itot, 2) + ' A';
+    document.getElementById('elec-stat-i1').textContent = fmt(r.I1, 2) + ' A';
+    document.getElementById('elec-stat-i2').textContent = fmt(r.I2, 2) + ' A';
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var r = compute();
+    ctx.lineCap = 'round';
+    if (mode === 'series') {
+      var y1 = 90, y0 = 250, xL = 90, xR = 470;
+      ctx.strokeStyle = '#eaeef2'; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.moveTo(xL,y0); ctx.lineTo(xL,y1); ctx.lineTo(220,y1); ctx.stroke();
+      drawResistor(220, 340, y1, 'R1 = ' + r1Slider.value + '\u03a9');
+      ctx.beginPath(); ctx.moveTo(340,y1); ctx.lineTo(360,y1); ctx.stroke();
+      drawResistor(360, 480, y1, 'R2 = ' + r2Slider.value + '\u03a9');
+      ctx.beginPath(); ctx.moveTo(480,y1); ctx.lineTo(xR,y1); ctx.lineTo(xR,y0); ctx.lineTo(300,y0); ctx.stroke();
+      drawBattery(280, y0);
+      var loop = [[300,y0],[xL,y0],[xL,y1],[220,y1],[340,y1],[360,y1],[480,y1],[xR,y1],[xR,y0],[260,y0]];
+      dotsAlongPath(loop, flowOffset, r.Itot, '#ffd23f');
+    } else {
+      var yTop = 70, yMid = 170, yBot = 270, xL = 90, xR = 470, xSplit1 = 240, xSplit2 = 360;
+      ctx.strokeStyle = '#eaeef2'; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.moveTo(xL,yBot); ctx.lineTo(xL,yTop); ctx.lineTo(xR,yTop); ctx.lineTo(xR,yBot); ctx.lineTo(300,yBot); ctx.stroke();
+      drawBattery(280, yBot);
+      ctx.beginPath();
+      ctx.moveTo(xSplit1, yTop); ctx.lineTo(xSplit1, 105);
+      ctx.moveTo(xSplit1, 235); ctx.lineTo(xSplit1, yBot);
+      ctx.moveTo(xSplit2, yTop); ctx.lineTo(xSplit2, 105);
+      ctx.moveTo(xSplit2, 235); ctx.lineTo(xSplit2, yBot);
+      ctx.stroke();
+      ctx.save(); ctx.translate(xSplit1, 170); ctx.rotate(Math.PI/2);
+      drawResistorVert();
+      ctx.restore();
+      ctx.save(); ctx.translate(xSplit2, 170); ctx.rotate(Math.PI/2);
+      drawResistorVert();
+      ctx.restore();
+      ctx.fillStyle = '#8b96a5'; ctx.font = '11px JetBrains Mono'; ctx.textAlign = 'center';
+      ctx.fillText('R1 = ' + r1Slider.value + '\u03a9', xSplit1 - 34, 170);
+      ctx.fillText('R2 = ' + r2Slider.value + '\u03a9', xSplit2 + 34, 170);
+      var mainLoop = [[260,yBot],[xL,yBot],[xL,yTop],[xR,yTop],[xR,yBot],[300,yBot]];
+      dotsAlongPath(mainLoop, flowOffset, r.Itot, '#ffd23f');
+      dotsAlongPath([[xSplit1,105],[xSplit1,235]], flowOffset*1.3, r.I1, '#38bdf8');
+      dotsAlongPath([[xSplit2,105],[xSplit2,235]], flowOffset*1.3, r.I2, '#b98af7');
+
+      function drawResistorVert() {
+        var n = 6, h = 9;
+        ctx.beginPath(); ctx.moveTo(-65, 0);
+        var seg = 130 / n;
+        for (var i = 0; i < n; i++) ctx.lineTo(-65 + seg * (i + 0.5), (i % 2 === 0 ? -h : h));
+        ctx.lineTo(65, 0);
+        ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 2.4; ctx.stroke();
+      }
+    }
+  }
+
+  simRegistry['elec-circuits'] = { update: update, draw: draw };
+})();
+
+/* ---------------- Electricity: Coulomb's law ---------------- */
+(function() {
+  var canvas = document.getElementById('elec-coulomb-canvas');
+  var W = 560, H = 340;
+  var ctx = setupCanvas(canvas, W, H);
+  var q1Slider = document.getElementById('elec-coulomb-q1');
+  var q2Slider = document.getElementById('elec-coulomb-q2');
+  var rSlider = document.getElementById('elec-coulomb-r');
+  var sign1 = 1, sign2 = 1;
+  var kC = 8.99e9, midY = H / 2, PXPERM = 130;
+
+  function bindSlider(s, out, d) { s.addEventListener('input', function () { out.textContent = fmt(parseFloat(s.value), d); }); }
+  bindSlider(q1Slider, document.getElementById('elec-coulomb-q1-val'), 0);
+  bindSlider(q2Slider, document.getElementById('elec-coulomb-q2-val'), 0);
+  bindSlider(rSlider, document.getElementById('elec-coulomb-r-val'), 1);
+
+  var s1btn = document.getElementById('elec-coulomb-sign1');
+  var s2btn = document.getElementById('elec-coulomb-sign2');
+  s1btn.addEventListener('click', function () { sign1 *= -1; s1btn.textContent = 'q1: ' + (sign1 > 0 ? '+' : '\u2212'); });
+  s2btn.addEventListener('click', function () { sign2 *= -1; s2btn.textContent = 'q2: ' + (sign2 > 0 ? '+' : '\u2212'); });
+
+  function compute() {
+    var q1 = parseFloat(q1Slider.value) * 1e-6 * sign1;
+    var q2 = parseFloat(q2Slider.value) * 1e-6 * sign2;
+    var r = parseFloat(rSlider.value);
+    var F = kC * Math.abs(q1 * q2) / (r * r);
+    return { F: F, attract: (q1 * q2) < 0 };
+  }
+
+  function update(dt) {
+    var r = compute();
+    document.getElementById('elec-coulomb-stat-f').textContent = fmt(r.F, 2) + ' N';
+    document.getElementById('elec-coulomb-stat-type').textContent = r.attract ? 'Attract' : 'Repel';
+  }
+
+  function drawArrow(x0, y0, x1, y1) {
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+    var ang = Math.atan2(y1 - y0, x1 - x0);
+    ctx.save(); ctx.translate(x1, y1); ctx.rotate(ang);
+    ctx.fillStyle = '#ffd23f';
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-9, 4); ctx.lineTo(-9, -4); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var r = compute();
+    var dist = parseFloat(rSlider.value) * PXPERM;
+    var cx = W / 2;
+    var x1 = cx - dist / 2, x2 = cx + dist / 2;
+    var col1 = sign1 > 0 ? '#ff6b6b' : '#5bc0ff';
+    var col2 = sign2 > 0 ? '#ff6b6b' : '#5bc0ff';
+
+    ctx.fillStyle = col1; ctx.beginPath(); ctx.arc(x1, midY, 22, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = col2; ctx.beginPath(); ctx.arc(x2, midY, 22, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#0a0e14'; ctx.font = 'bold 18px JetBrains Mono'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(sign1 > 0 ? '+' : '\u2212', x1, midY + 1);
+    ctx.fillText(sign2 > 0 ? '+' : '\u2212', x2, midY + 1);
+    ctx.textBaseline = 'alphabetic';
+
+    var arrowLen = Math.min(20 + r.F * 18, 90);
+    ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 2.6;
+    if (r.attract) {
+      drawArrow(x1 + 26, midY - 40, x1 + 26 + arrowLen, midY - 40);
+      drawArrow(x2 - 26, midY - 40, x2 - 26 - arrowLen, midY - 40);
+    } else {
+      drawArrow(x1 - 26, midY - 40, x1 - 26 - arrowLen, midY - 40);
+      drawArrow(x2 + 26, midY - 40, x2 + 26 + arrowLen, midY - 40);
+    }
+
+    ctx.strokeStyle = '#3c4655'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(x1, midY + 40); ctx.lineTo(x2, midY + 40); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#8b96a5'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'center';
+    ctx.fillText('r = ' + rSlider.value + ' m', cx, midY + 56);
+  }
+
+  simRegistry['elec-coulomb'] = { update: update, draw: draw };
+})();
+
+/* ---------------- Electricity: capacitor charging ---------------- */
+(function() {
+  var canvas = document.getElementById('elec-cap-canvas');
+  var W = 560, H = 340;
+  var ctx = setupCanvas(canvas, W, H);
+  var vSlider = document.getElementById('elec-cap-v');
+  var rSlider = document.getElementById('elec-cap-r');
+  var cSlider = document.getElementById('elec-cap-c');
+  var charging = false, tCharge = 0, trace = [];
+
+  function bindSlider(s, out, d) { s.addEventListener('input', function () { out.textContent = fmt(parseFloat(s.value), d); }); }
+  bindSlider(vSlider, document.getElementById('elec-cap-v-val'), 0);
+  bindSlider(rSlider, document.getElementById('elec-cap-r-val'), 0);
+  bindSlider(cSlider, document.getElementById('elec-cap-c-val'), 0);
+
+  document.getElementById('elec-cap-charge').addEventListener('click', function () { charging = true; tCharge = 0; trace = []; });
+  document.getElementById('elec-cap-reset').addEventListener('click', function () { charging = false; tCharge = 0; trace = []; });
+
+  function update(dt) {
+    var V = parseFloat(vSlider.value), R = parseFloat(rSlider.value), C = parseFloat(cSlider.value) * 1e-6;
+    var tau = R * C;
+    if (charging) tCharge += dt;
+    var Vc = charging ? V * (1 - Math.exp(-tCharge / tau)) : 0;
+    var Q = C * Vc;
+    document.getElementById('elec-cap-stat-q').textContent = fmt(Q * 1e6, 1) + ' \u00b5C';
+    document.getElementById('elec-cap-stat-v').textContent = fmt(Vc, 2) + ' V';
+    trace.push(Vc / Math.max(V, 0.001));
+    if (trace.length > 260) trace.shift();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var V = parseFloat(vSlider.value);
+    var frac = charging ? (trace.length ? trace[trace.length - 1] : 0) : 0;
+
+    var px1 = 130, px2 = 170, py0 = 60, py1 = 180;
+    ctx.strokeStyle = '#eaeef2'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(60, py1); ctx.lineTo(60, py0); ctx.lineTo(px1, py0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px2, py0); ctx.lineTo(230, py0); ctx.lineTo(230, py1); ctx.lineTo(60, py1); ctx.stroke();
+    ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(px1, py0 - 24); ctx.lineTo(px1, py0 + 24); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px2, py0 - 24); ctx.lineTo(px2, py0 + 24); ctx.stroke();
+    var chargeAlpha = 0.25 + frac * 0.65;
+    ctx.fillStyle = 'rgba(255,107,107,' + chargeAlpha + ')'; ctx.font = '16px JetBrains Mono'; ctx.textAlign = 'center';
+    ctx.fillText('+', px1, py0 - 32);
+    ctx.fillStyle = 'rgba(91,192,255,' + chargeAlpha + ')';
+    ctx.fillText('\u2212', px2, py0 - 32);
+
+    ctx.strokeStyle = '#eaeef2'; ctx.lineWidth = 3.6;
+    ctx.beginPath(); ctx.moveTo(35, py1 - 9); ctx.lineTo(85, py1 - 9); ctx.stroke();
+    ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(45, py1 + 9); ctx.lineTo(75, py1 + 9); ctx.stroke();
+    ctx.fillStyle = '#8b96a5'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'left';
+    ctx.fillText('V = ' + vSlider.value + ' V', 20, py1 + 30);
+    ctx.fillText('R = ' + rSlider.value + ' \u03a9', 130, py1 + 30);
+
+    var gx0 = 280, gw = 250, gy0 = 60, gh = 200;
+    ctx.strokeStyle = '#232a37'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(gx0, gy0); ctx.lineTo(gx0, gy0 + gh); ctx.lineTo(gx0 + gw, gy0 + gh); ctx.stroke();
+    ctx.fillStyle = '#57616f'; ctx.font = '9.5px JetBrains Mono';
+    ctx.fillText('Vc vs. time', gx0, gy0 - 8);
+    ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    for (var i = 0; i < trace.length; i++) {
+      var x = gx0 + (i / 260) * gw;
+      var y = gy0 + gh - trace[i] * gh;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  simRegistry['elec-capacitor'] = { update: update, draw: draw };
+})();
+
+/* ---------------- main loop ---------------- */
+var lastTs = null;
+function mainLoop(ts) {
+  if (lastTs === null) lastTs = ts;
+  var dt = Math.min((ts - lastTs) / 1000, 0.05);
+  lastTs = ts;
+  var key = activeSubSim[activeSim];
+  var mod = simRegistry[key];
+  if (mod) { mod.update(dt); mod.draw(); }
+  requestAnimationFrame(mainLoop);
+}
+requestAnimationFrame(mainLoop);
+</script>
+</body>
+</html>

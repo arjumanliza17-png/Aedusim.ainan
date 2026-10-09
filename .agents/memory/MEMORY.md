@@ -1,0 +1,3 @@
+- [Admin Dashboard](admin-dashboard.md) — full admin panel built; seeding, routes, page inventory, and architecture notes
+- [Learning System](learning-system.md) — adaptive learning system: content in TypeScript (subjects.ts), progress in DB (topic_progress + placement_results), 3 UI pages
+- [Clerk provisioning](clerk-provisioning.md) — managed auth setup can remain unavailable when Replit derives an invalid app name from an uploaded archive
