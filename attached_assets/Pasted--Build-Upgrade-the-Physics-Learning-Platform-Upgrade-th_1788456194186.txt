@@ -1,0 +1,448 @@
+# Build & Upgrade the Physics Learning Platform
+
+Upgrade the existing learning platform into a polished, interactive physics-learning experience. **Do not just create a mockup. Implement the features so they actually work.** Preserve useful existing functionality while restructuring the physics content and improving the UX.
+
+0. Falcoa reply must be normal like other ai not a systematic but try to be educational rule following. Strictly seperate plans (pro, free etc) not only in main but also in adusim admin record.
+
+## 1. Physics Content Structure
+
+Take the existing physics chapter content and separate it into two clearly organized parts:
+
+### A. Lessons
+
+Each chapter should contain structured lessons.
+
+Example:
+
+Physics
+→ Mechanics
+→ Chapter 1
+→ Lesson 1
+→ Lesson 2
+→ Lesson 3
+→ Continue Quiz
+→ Chapter Complete
+
+Organize major physics topics such as:
+
+* Mechanics
+* Thermodynamics
+* Electricity
+* Waves
+* Modern Physics
+* Optics
+* Magnetism
+* Other available physics chapters
+
+When the user clicks a topic such as **Mechanics**, **Thermodynamics**, **Electricity**, **Modern Physics**, or **Waves**, open its available chapters.
+
+Do NOT expose the entire course immediately.
+
+## 2. Progressive Lesson Unlocking
+
+Use progression-based access.
+
+A user should normally complete:
+
+**Lesson → Quiz → Next Lesson**
+
+After completing all lessons and quizzes in a chapter:
+
+**Chapter Complete → Next Chapter Unlocked**
+
+Do not unlock everything from the beginning.
+
+Clearly show:
+
+* Completed lessons
+* Current lesson
+* Locked lessons
+* Progress percentage
+* Chapter progress
+* Overall physics progress
+
+Locked content should have a clear but friendly explanation such as:
+
+> Complete the previous lesson to unlock this one.
+
+Do not make the free experience completely useless. Give users enough free content to understand the platform, while keeping advanced chapters/features appropriately locked.
+
+## 3. Lesson Experience
+
+Each lesson should feel like a real interactive lesson, not a long wall of text.
+
+Use:
+
+* Short explanations
+* Important formulas
+* Examples
+* Diagrams
+* Relevant images
+* Interactive simulations where useful
+* Videos where genuinely helpful
+* Small knowledge checks
+* "Continue" button
+
+Keep explanations natural and readable.
+
+Avoid unnecessary sections, excessive headings, and overly formal AI-generated language.
+
+### Important
+
+Do NOT add simulations just for decoration.
+
+Use simulations when they genuinely help explain a physics concept.
+
+Examples:
+
+* Projectile motion
+* Newton's laws
+* Forces and friction
+* Electric circuits
+* Wave motion
+* Refraction
+* Lens behavior
+* Thermodynamic processes
+* Magnetic fields
+
+Make simulations interactive where possible, allowing users to change relevant variables and observe the result.
+
+## 4. Lesson → Quiz Flow
+
+At the end of every lesson, show:
+
+**Continue to Quiz**
+
+The quiz should appear only after the relevant lesson has been completed.
+
+Questions should appear **one at a time**, rather than displaying a huge question list.
+
+Example:
+
+Question 1/5
+
+[Question]
+
+[Option A]
+[Option B]
+[Option C]
+[Option D]
+
+Then:
+
+**Next Question**
+
+After completing the quiz, show:
+
+* Score
+* Correct answers
+* Short explanations
+* XP earned
+* Chapter/lesson progress
+* Continue button
+
+Do not make XP rewards unrealistic.
+
+## 5. XP System
+
+Create a meaningful XP system.
+
+XP should be awarded for useful learning actions such as:
+
+* Completing a lesson
+* Completing a quiz
+* Answering correctly
+* Completing a chapter
+* Maintaining reasonable study consistency
+
+Keep XP values realistic.
+
+Example:
+
+* Lesson completed: +10 XP
+* Quiz completed: +10 XP
+* Correct answer: +2 XP
+* Chapter completed: +30 XP
+
+Do NOT give huge amounts such as 1,000 XP for a tiny action.
+
+Avoid XP farming. Repeatedly clicking the same action should not continuously generate XP.
+
+## 6. Leaderboard
+
+Create a leaderboard based on **XP**.
+
+Show:
+
+* Rank
+* User
+* XP
+* Progress/level if useful
+
+Make the leaderboard motivating rather than overly competitive.
+
+If appropriate, use weekly/monthly/all-time views.
+
+Do not allow users to manipulate the leaderboard by repeatedly completing the same activity.
+
+## 7. Images & Videos
+
+Add images only when they improve understanding.
+
+For example:
+
+* Mechanics → force diagrams
+* Waves → wave diagrams
+* Electricity → circuit diagrams
+* Optics → ray diagrams
+* Modern physics → conceptual illustrations
+
+Add educational videos where useful.
+
+Do not overload lessons with media.
+
+Media should support the explanation, not replace it.
+
+## 8. Mathematics & Formula Formatting
+
+Use normal mathematical notation.
+
+Never display ugly programming-style notation such as:
+
+`2**2`
+
+or
+
+`2*3`
+
+Instead use:
+
+**2^2**
+
+**2 × 3**
+
+Use:
+
+* × for multiplication
+* ÷ for division
+* ^ for powers when proper mathematical rendering is unavailable
+* √ for square roots where appropriate
+* Proper fractions where possible
+* Proper units and symbols
+
+Example:
+
+Bad:
+`v = u + a*t`
+
+Better:
+
+**v = u + at**
+
+Bad:
+
+`2*3 = 6`
+
+Better:
+
+**2 × 3 = 6**
+
+Make mathematical expressions visually clean and readable.
+
+## 9. Answer Style
+
+The current AI answers feel too systematic and robotic.
+
+Change the response style.
+
+Answers should feel like a good human teacher explaining something naturally.
+
+Avoid:
+
+* Excessive headings
+* Repetitive "Step 1 / Step 2 / Step 3" formatting
+* Unnecessary summaries
+* Robotic introductions
+* Repeating the question
+* Excessively formal wording
+* Over-explaining simple questions
+
+Prefer:
+
+> The force is 20 N. Since F = ma, we can find the acceleration by dividing the force by the mass...
+
+Keep answers concise when the question is simple and detailed when the concept actually requires it.
+
+## 10. Exam Builder
+
+Redesign the Exam Builder to be **lighter, faster, simpler, and fully functional**.
+
+The user should be able to select:
+
+* Subject
+* Chapters/topics
+* Number of questions
+* Difficulty
+* Question type
+* Time limit
+
+Then generate the exam.
+
+The exam interface should be clean and distraction-free.
+
+Include:
+
+* Question number
+* Question
+* Answer choices where applicable
+* Previous/Next
+* Question navigation
+* Timer when enabled
+* Submit Exam
+
+After submission show:
+
+* Total score
+* Correct answers
+* Wrong answers
+* Unanswered questions
+* Percentage
+* Question-by-question explanations
+* Weak topics
+
+Make the Exam Builder actually functional rather than only visually impressive.
+
+## 11. Free vs Premium Access
+
+Do not give users access to everything for free.
+
+Create a sensible content-access system.
+
+Free users should have access to enough content to properly experience the platform.
+
+Some advanced content can be locked, such as:
+
+* Selected advanced chapters
+* Advanced simulations
+* Large exam sets
+* Premium question banks
+* Advanced analytics
+
+Locked content should visibly indicate that it is locked.
+
+Do not randomly lock basic navigation or make the free version frustrating.
+
+## 12. Study Routine Builder
+
+When a user chooses:
+
+**Create Study Routine**
+
+first collect the information actually required.
+
+Ask only useful questions, for example:
+
+* What subjects/topics do you want to study?
+* What is your target?
+* How much time can you study per day?
+* Which days are available?
+* Preferred study time
+* Exam date/deadline, if relevant
+* Current progress/weak areas, if relevant
+
+Do not ask unnecessary questions.
+
+After collecting the information, generate a practical study routine.
+
+### Routine Presentation
+
+Create a clean, user-friendly table such as:
+
+| Day      | Time         | Subject     | Topic     | Activity          | Duration |
+| -------- | ------------ | ----------- | --------- | ----------------- | -------- |
+| Saturday | 6:00–6:40 PM | Physics     | Mechanics | Lesson + Practice | 40 min   |
+| Saturday | 6:50–7:20 PM | Mathematics | Algebra   | Practice          | 30 min   |
+
+Keep the routine realistic.
+
+Do not schedule impossible workloads.
+
+## 13. AI-Generated Routine Visual
+
+After generating the study routine, use the available image-generation capability to create a visually appealing routine/planner representation **only when it adds value**.
+
+The visual should prioritize:
+
+* Readability
+* Clear day/time structure
+* Subject identification
+* Simple educational design
+* Easy scanning on mobile
+
+The actual routine data must remain available as normal text/table data too. Do not make the image the only representation of the schedule.
+
+## 14. Mobile UX
+
+The platform should work extremely well on mobile.
+
+Pay special attention to:
+
+* Large readable text
+* Touch-friendly buttons
+* Minimal scrolling during quizzes
+* One-question-at-a-time quiz interface
+* Fast page transitions
+* Clear locked/unlocked states
+* Progress indicators
+* Clean navigation
+
+Avoid clutter.
+
+## 15. Overall UI Philosophy
+
+The platform should feel like a modern educational product, not an AI-generated dashboard.
+
+Prioritize:
+
+**Clarity → Learning → Interaction → Progress → Motivation**
+
+rather than filling every screen with cards, statistics, badges, and animations.
+
+Use animations only when they improve understanding or feedback.
+
+## 16. Important Implementation Rules
+
+Before finishing:
+
+1. Inspect the existing physics content.
+2. Separate chapters, lessons, quizzes, and supporting media properly.
+3. Build the progression/unlocking system.
+4. Make quizzes functional.
+5. Make XP functional.
+6. Make the leaderboard functional.
+7. Make the Exam Builder functional.
+8. Make the Study Routine Builder functional.
+9. Implement appropriate free/locked content.
+10. Add simulations only where educationally useful.
+11. Ensure mathematical notation is clean.
+12. Remove robotic AI-answer formatting.
+13. Test navigation between lessons.
+14. Test locked/unlocked states.
+15. Test quiz scoring.
+16. Test XP calculations.
+17. Test leaderboard ranking.
+18. Test exam submission/results.
+19. Test study-routine generation.
+20. Test everything on mobile.
+
+## Final Goal
+
+The final product should feel like a **real interactive physics learning app** where the student naturally follows:
+
+**Choose Topic → Learn → Interact → Take Quiz → Earn Reasonable XP → Unlock Next Lesson → Complete Chapter → Continue Learning → Take Exams**
+
+Do not sacrifice functionality for visual design.
+
+Do not make the interface unnecessarily complicated.
+
+Make it feel natural, fast, educational, and genuinely enjoyable to use.

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Aedusim"
+version = "1.0.0"
+id = "artifacts/aedusim"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18807
+
+[services.development]
+run = "pnpm --filter @workspace/aedusim run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aedusim", "run", "build" ]
+publicDir = "artifacts/aedusim/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18807"
+BASE_PATH = "/"

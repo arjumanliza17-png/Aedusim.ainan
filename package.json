@@ -1,0 +1,25 @@
+{
+  "name": "@workspace/root",
+  "version": "0.0.0",
+  "private": true,
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "tesseract.js",
+      "esbuild-plugin-pino"
+    ]
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter @workspace/aedusim run dev",
+    "dev:api": "pnpm --filter @workspace/api-server run dev",
+    "build": "pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/aedusim run build"
+  },
+  "dependencies": {
+    "@clerk/express": "^2.1.72",
+    "@clerk/react": "^6.17.2",
+    "@clerk/shared": "^4.36.0",
+    "@clerk/themes": "^2.4.57",
+    "http-proxy-middleware": "^4.2.0",
+    "pnpm": "^10.26.1"
+  }
+}
